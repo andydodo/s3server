@@ -24,8 +24,8 @@ func TestPutHeadBucket(t *testing.T) {
 	if err != nil {
 		t.Error("Head for existing Bucket resulted in an error")
 	}
-
 }
+
 func TestHeadNonExistBucket(t *testing.T) {
 	backend := create()
 

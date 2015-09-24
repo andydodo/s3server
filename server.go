@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/0x434D53/s3server/s3backend"
+	"github.com/0x434D53/s3server/s3backend/common"
 )
 
 const (
