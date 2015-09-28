@@ -1,8 +1,8 @@
 package inMemory
 
 import (
-	"fmt"
 	"sync"
+	"time"
 
 	. "github.com/0x434D53/s3server/common"
 )
@@ -13,7 +13,9 @@ type object struct {
 }
 
 type bucket struct {
-	objects map[string]*object
+	objects      map[string]*object
+	name         string
+	creationDate time.Time
 	sync.Mutex
 }
 
@@ -31,7 +33,22 @@ func NewS3Backend() S3Backend {
 }
 
 func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, error) {
-	return nil, fmt.Errorf("Not Implemented")
+	s3.Lock()
+	defer s3.Unlock()
+	res := ListAllMyBucketsResult{}
+	res.Owner = Owner{ID: auth}
+
+	var buckets []*Bucket
+
+	for k, v := range s3.buckets {
+		bucket := Bucket{Name: k, CreationDate: v.creationDate}
+
+		buckets = append(buckets, &bucket)
+	}
+
+	res.Buckets = buckets
+
+	return &res, nil
 }
 
 func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []byte, auth string) error {
