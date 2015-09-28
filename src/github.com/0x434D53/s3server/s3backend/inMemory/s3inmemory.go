@@ -1,6 +1,7 @@
-package s3backend
+package inMemory
 
 import (
+	"fmt"
 	"sync"
 
 	. "github.com/0x434D53/s3server/common"
@@ -21,12 +22,16 @@ type S3InMemory struct {
 	sync.Mutex
 }
 
-func NewS3InMemory() S3Backend {
+func NewS3Backend() S3Backend {
 	s3 := &S3InMemory{
 		buckets: make(map[string]*bucket, 0),
 	}
 
 	return s3
+}
+
+func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, error) {
+	return nil, fmt.Errorf("Not Implemented")
 }
 
 func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []byte, auth string) error {

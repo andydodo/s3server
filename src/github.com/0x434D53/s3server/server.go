@@ -9,7 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/0x434D53/s3server/s3backend"
+	"github.com/0x434D53/s3server/common"
+	"github.com/0x434D53/s3server/s3backend/inMemory"
 )
 
 const (
@@ -127,6 +128,7 @@ type Error struct {
 
 const (
 	GETBUCKET_OBJECTLIST S3METHOD = iota
+	GETBUCKET
 	GETBUCKET_ACL
 	GETBUCKET_CORS
 	GETBUCKET_LIFECYCLE
@@ -172,7 +174,7 @@ type S3Request struct {
 	serversideEncryption bool
 }
 
-var backend s3backend.S3Backend
+var backend common.S3Backend
 
 func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
@@ -259,7 +261,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	case PUTBUCKET:
 		putBucketHandler(w, r, rd)
 	case GETBUCKET:
-
+		getBucketHandler(w, r, rd)
 	}
 
 	fmt.Printf("%v\n", rd)
@@ -335,7 +337,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	backend = s3backend.NewS3InMemory()
+	backend = inMemory.NewS3Backend()
 
 	http.HandleFunc("/", mainHandler)
 
