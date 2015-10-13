@@ -15,7 +15,7 @@ var localRegion = aws.Region{
 	S3LowercaseBucket:    true,
 }
 
-func TestPutBucket(t *testing.T) {
+func TestBucketCycle(t *testing.T) {
 	auth, err := aws.EnvAuth()
 
 	if err != nil {

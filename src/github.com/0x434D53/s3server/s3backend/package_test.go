@@ -1,13 +1,18 @@
 package s3backend
 
-import "testing"
+import (
+	"testing"
+
+	. "github.com/0x434D53/s3server/common"
+	. "github.com/0x434D53/s3server/s3backend/inMemory"
+)
 
 var backend S3Backend
 
 var create func() S3Backend
 
 func init() {
-	create = NewS3InMemory
+	create = NewS3Backend
 }
 
 func TestPutHeadBucket(t *testing.T) {

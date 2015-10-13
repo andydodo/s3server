@@ -21,7 +21,7 @@ type bucket struct {
 
 type S3InMemory struct {
 	buckets map[string]*bucket
-	sync.Mutex
+	sync.RWMutex
 }
 
 func NewS3Backend() S3Backend {
