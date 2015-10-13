@@ -1,6 +1,8 @@
 package inMemory
 
 import (
+	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -12,11 +14,19 @@ type object struct {
 	contents []byte
 }
 
+func (o object) String() string {
+	return o.name
+}
+
 type bucket struct {
 	objects      map[string]*object
 	name         string
 	creationDate time.Time
 	sync.Mutex
+}
+
+func (b bucket) String() string {
+	return fmt.Sprintf("%v [ %v ] ", b.name, b.objects)
 }
 
 type S3InMemory struct {
@@ -143,11 +153,12 @@ func (s3 *S3InMemory) HeadBucket(bucket string, auth string) error {
 	s3.Lock()
 	defer s3.Unlock()
 
-	if _, ok := s3.buckets[bucket]; !ok {
+	log.Print(bucket)
+	if _, ok := s3.buckets[bucket]; ok {
+		return nil
+	} else {
 		return ErrNotFound
 	}
-
-	return nil
 }
 
 func (s3 *S3InMemory) HeadObject(bucket string, object string, auth string) error {

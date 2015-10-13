@@ -29,7 +29,17 @@ func TestBucketCycle(t *testing.T) {
 	err = b.PutBucket("acl")
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
+	}
+
+	o, err := b.GetBucketContents()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(*o) != 0 {
+		t.Fatalf("Bucket should be empty, but has %d object", len(*o))
 	}
 }
 

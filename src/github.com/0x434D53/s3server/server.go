@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"path"
@@ -174,77 +173,115 @@ type S3Request struct {
 	serversideEncryption bool
 }
 
+func (s S3Request) String() string {
+	return fmt.Sprintf("%s/%s | %s / %v", s.bucket, s.object, s.method, s.s3method)
+}
+
 var backend common.S3Backend
 
-func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	err := backend.HeadBucket(rd.bucket, rd.authorization)
 
+	log.Printf("HeadBucketHandler: %v", err)
+
+	if err == common.ErrNotFound {
+		http.Error(w, "Not Found", 404)
+	} else if err != nil {
+		http.Error(w, "Error", 500)
+	} else {
+		w.WriteHeader(200)
+	}
+}
+
+func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	http.Error(w, "Not Implemented", 500)
 }
 
 func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	err := backend.PutBucket(rd.bucket, rd.authorization)
+
+	if err != nil {
+		http.Error(w, "Error", 500)
+	} else {
+		w.WriteHeader(200)
+	}
 }
 
 func getBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
+	http.Error(w, "Not Implemented", 500)
 }
 
 func getBucketLocationHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
+	http.Error(w, "Not Implemented", 500)
 }
 
 func deleteBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
+	http.Error(w, "Not Implemented", 500)
 }
 
 func postObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func getObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func putObjectHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func copyObjectHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func headObjectHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func deleteObjectHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func getBucketObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func getBucketVersioningHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func putBucketVersioningHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func deleteObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func getObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func headObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func putObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
 
+	http.Error(w, "Not Implemented", 500)
 }
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
@@ -262,6 +299,9 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		putBucketHandler(w, r, rd)
 	case GETBUCKET:
 		getBucketHandler(w, r, rd)
+	case HEADBUCKET:
+		log.Printf("HeadBucket")
+		headBucketHandler(w, r, rd)
 	}
 
 	fmt.Printf("%v\n", rd)
@@ -274,8 +314,9 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 
 	if r.Host == HOST {
 		pathMethod = true
-		fmt.Println("PATH")
 	}
+
+	log.Print(r.URL.Path)
 
 	if pathMethod {
 		s3r.bucket, s3r.object = path.Split(r.URL.Path)
@@ -284,31 +325,42 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 		//TODO
 	}
 
+	log.Print(r.Method)
+
 	if s3r.object == "" {
 		switch r.Method {
 		case "POST":
 			return nil, fmt.Errorf("No POST on Buckets")
 		case "PUT":
 			s3r.s3method = PUTBUCKET
+			s3r.method = "PUTBUCKET"
 		case "DELETE":
 			s3r.s3method = DELETEBUCKET
+			s3r.method = "DELETEBUCKET"
 		case "HEAD":
 			s3r.s3method = HEADBUCKET
+			s3r.method = "HEADBUCKET"
 		case "GET":
 			s3r.s3method = GETBUCKET
+			s3r.method = "GETBUCKET"
 		}
 	} else {
 		switch r.Method {
 		case "POST":
 			s3r.s3method = POSTOBJECT
+			s3r.method = "POSTOBJECT"
 		case "PUT":
 			s3r.s3method = PUTOBJECT
+			s3r.method = "PUTOBJECT"
 		case "DELETE":
 			s3r.s3method = DELETEOBJECT
+			s3r.method = "DELETEOBJECT"
 		case "HEAD":
 			s3r.s3method = HEADOBJECT
+			s3r.method = "HEADOBJECT"
 		case "GET":
 			s3r.s3method = GETOBJECT
+			s3r.method = "GETOBJECT"
 		}
 	}
 
@@ -317,23 +369,6 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 	s3r.contentMD5 = []byte(r.Header.Get("Content-MD5"))
 
 	return &s3r, nil
-}
-
-func testHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.URL.Path)
-	fmt.Println(r.Host)
-	fmt.Println(r.Header)
-	fmt.Println(r.Method)
-
-	b, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		log.Print(err)
-		return
-	}
-
-	fmt.Println(string(b))
-	w.WriteHeader(200)
 }
 
 func main() {
