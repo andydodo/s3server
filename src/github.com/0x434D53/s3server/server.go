@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/xml"
 	"fmt"
 	"log"
 	"net/http"
@@ -179,6 +180,30 @@ func (s S3Request) String() string {
 
 var backend common.S3Backend
 
+func writeCommonHeaders(w http.ResponseWriter, h *common.ResponseHeaders) {
+	hd := w.Header()
+
+	if h.ContentLength != "" {
+		hd.Set("Content-Length", h.ContentLength)
+	}
+
+	if h.ContentType != "" {
+		hd.Set("Content-Type", h.ContentType)
+	}
+
+	hd.Set("Date", h.Date)
+	hd.Set("ETag", h.ETag)
+
+	if h.Server != "" {
+		hd.Set("Server", h.Server)
+	}
+
+	hd.Set("x-amz-delete-marker", h.XAmzDeleteMarker)
+	hd.Set("x-amz-id-2", h.XAmzId2)
+	hd.Set("x-amz-request-id", h.XAmzRequestId)
+	hd.Set("x-amz-version-id", h.XAmzVersionId)
+}
+
 func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 	err := backend.HeadBucket(rd.bucket, rd.authorization)
 
@@ -194,7 +219,6 @@ func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	http.Error(w, "Not Implemented", 500)
 }
 
 func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
@@ -208,7 +232,26 @@ func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	http.Error(w, "Not Implemented", 500)
+	lbr, err := backend.GetBucketObjects(rd.bucket, rd.authorization)
+
+	if err == common.ErrNotFound {
+		http.Error(w, "Not Found", 404)
+		return
+	} else if err != nil {
+		log.Print(err)
+		http.Error(w, "Error", 500)
+		return
+	}
+
+	b, err := xml.Marshal(lbr)
+
+	if err != nil {
+		log.Print(err)
+		http.Error(w, "Error", 500)
+		return
+	}
+
+	w.Write(b)
 }
 
 func getBucketLocationHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {

@@ -43,11 +43,11 @@ func TestBucketCycle(t *testing.T) {
 	}
 }
 
-func TestGetBucket(t *testing.T) {
+func _TestGetBucket(t *testing.T) {
 
 }
 
-func TestPutObject(t *testing.T) {
+func _TestPutObject(t *testing.T) {
 	auth, err := aws.EnvAuth()
 
 	if err != nil {

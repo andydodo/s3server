@@ -130,8 +130,10 @@ func (s3 *S3InMemory) PutBucket(bucketName string, auth string) error {
 	return ErrAlreadyExists
 }
 
-func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) ([]string, error) {
+func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) (*ListBucketResult, error) {
+	s3.Lock()
 	b, ok := s3.buckets[bucketName]
+	s3.Unlock()
 
 	if !ok {
 		return nil, ErrNotFound
@@ -140,13 +142,21 @@ func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) ([]string
 	b.Lock()
 	defer b.Unlock()
 
-	ret := make([]string, 0, len(b.objects))
+	lbr := ListBucketResult{}
 
-	for k, _ := range b.objects {
-		ret = append(ret, k)
+	lbr.Name = b.name
+	lbr.Contents = make([]Contents, 0, len(b.objects))
+
+	for _, v := range b.objects {
+		o := Contents{}
+
+		o.Key = v.name
+		o.Size = len(v.contents)
+
+		lbr.Contents = append(lbr.Contents, o)
 	}
 
-	return ret, nil
+	return &lbr, nil
 }
 
 func (s3 *S3InMemory) HeadBucket(bucket string, auth string) error {

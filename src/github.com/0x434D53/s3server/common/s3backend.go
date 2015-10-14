@@ -31,7 +31,12 @@ type ListBucketResult struct {
 }
 
 type Contents struct {
-	Test string
+	Key          string
+	LastModified *time.Time
+	ETag         string
+	Size         int
+	StorageClass string
+	Owner        Owner
 }
 
 type Metadata struct{}
@@ -39,7 +44,7 @@ type Metadata struct{}
 type S3Backend interface {
 	GetService(auth string) (*ListAllMyBucketsResult, error)
 	DeleteBucket(bucket string, auth string) error
-	GetBucketObjects(bucket string, auth string) ([]string, error)
+	GetBucketObjects(bucket string, auth string) (*ListBucketResult, error)
 	HeadBucket(bucket string, auth string) error
 	PutBucket(bucket string, auth string) error // More Parameters available
 	DeleteObject(bucket string, object string, auth string) error
@@ -183,9 +188,9 @@ type RequestHeaders struct {
 
 type ResponseHeaders struct {
 	ContentLength    string
-	ContenyType      string
+	ContentType      string
 	Connection       string // open | close
-	Date             time.Time
+	Date             string
 	ETag             string
 	Server           string
 	XAmzDeleteMarker bool

@@ -94,7 +94,7 @@ func (d *Disk) DeleteBucket(bucketName string, auth string) error {
 	return os.Remove(path)
 }
 
-func (d *Disk) GetBucketObjects(bucketName string, auth string) ([]string, error) {
+func (d *Disk) GetBucketObjects(bucketName string, auth string) (*common.ListBucketResult, error) {
 	return nil, fmt.Errorf("Not implemented")
 }
 
