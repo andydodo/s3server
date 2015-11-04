@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/xml"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,10 +14,9 @@ import (
 	"github.com/0x434D53/s3server/s3backend/inMemory"
 )
 
-const (
-	HOST     = "localhost:10001"
-	BASEPATH = "s3"
-)
+var port = flag.String("port", "10001", "Server will run on this port")
+var basePath = flag.String("basepath", "s3", "Basepath for S3")
+var host string
 
 type S3METHOD int
 
@@ -28,10 +28,6 @@ type ListResp struct {
 	NextMarker string
 	MaxKeys    int
 
-	// IsTruncated is true if the results have been truncated because
-	// there are more keys and prefixes than can fit in MaxKeys.
-	// N.B. this is the opposite sense to that documented (incorrectly) in
-	// http://goo.gl/YjQTc
 	IsTruncated    bool
 	Contents       []Key
 	CommonPrefixes []string `xml:">Prefix"`
@@ -169,7 +165,7 @@ type S3Request struct {
 	contentLength        string
 	contentEncoding      string
 	lastModified         time.Time
-	versionId            string
+	versionID            string
 	deleteMarker         bool
 	serversideEncryption bool
 }
@@ -198,7 +194,7 @@ func writeCommonHeaders(w http.ResponseWriter, h *common.ResponseHeaders) {
 		hd.Set("Server", h.Server)
 	}
 
-	hd.Set("x-amz-delete-marker", h.XAmzDeleteMarker)
+	hd.Set("x-amz-delete-marker", fmt.Sprintf("%v", h.XAmzDeleteMarker))
 	hd.Set("x-amz-id-2", h.XAmzId2)
 	hd.Set("x-amz-request-id", h.XAmzRequestId)
 	hd.Set("x-amz-version-id", h.XAmzVersionId)
@@ -355,7 +351,7 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 
 	pathMethod := false
 
-	if r.Host == HOST {
+	if r.Host == host {
 		pathMethod = true
 	}
 
@@ -415,9 +411,11 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 }
 
 func main() {
+	flag.Parse()
+	host = "localhost:" + *port
 	backend = inMemory.NewS3Backend()
 
 	http.HandleFunc("/", mainHandler)
 
-	log.Fatal(http.ListenAndServe(HOST, nil))
+	log.Fatal(http.ListenAndServe(host, nil))
 }
