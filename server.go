@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"path"
@@ -15,10 +16,106 @@ import (
 )
 
 var port = flag.String("port", "10001", "Server will run on this port")
+var hostname = flag.String("host", "localhost", "Hostname analogous to w3.amazonaws.com")
 var basePath = flag.String("basepath", "s3", "Basepath for S3")
 var host string
 
 type S3METHOD int
+
+func (s S3METHOD) String() string {
+	switch s {
+	case GETBUCKET_OBJECTLIST:
+		return "GET Bucket objectlist"
+	case GETBUCKET:
+		return "GET Bucket"
+	case GETBUCKET_ACL:
+		return "GET Bucket acl"
+	case GETBUCKET_CORS:
+		return "GET Bucket cors"
+	case GETBUCKET_LIFECYCLE:
+		return "GET Bucket lifecycle"
+	case GETBUCKET_POLICY:
+		return "GET Bucket policy"
+	case GETBUCKET_LOCATION:
+		return "GET Bucket location"
+	case GETBUCKET_LOGGING:
+		return "GET Bucket logging"
+	case GETBUCKET_NOTIFICATION:
+		return "GET Bucket notification"
+	case GETBUCKET_REPLICATION:
+		return "GET Bucket replication"
+	case GETBUCKET_TAGGING:
+		return "GET Bucket tagging"
+	case GETBUCKET_OBJECTVERSION:
+		return "GET Bucket objectversion"
+	case GETBUCKET_REQUESTPAYMENT:
+		return "GET Bucket requestPayment"
+	case GETBUCKET_VERSIONING:
+		return "GET Bucket versioning"
+	case GETBUCKET_WEBSITE:
+		return "GET Bucket website"
+	case DELETEBUCKET:
+		return "DELETE Bucket"
+	case DELETEBUCKET_CORS:
+		return "DELETE Bucket cors"
+	case DELETEBUCKET_LIFTCYCLE:
+		return "DELETE Bucket lifecycle"
+	case DELETEBUCKET_POLICY:
+		return "DELETE Bucket policy"
+	case DELETEBUCKET_REPLICATION:
+		return "DELETE Bucket replication"
+	case DELETEBUCKET_TAGGING:
+		return "DELETE Bucket taggin"
+	case DELETEBUCKET_WEBSITE:
+		return "DELETE Bucket website"
+	case PUTBUCKET:
+		return "PUT Bucket"
+	case PUTBUCKET_ACL:
+		return "PUT Bucket acl"
+	case PUTBUCKET_CORS:
+		return "PUT Bucket cors"
+	case PUTBUCKET_LIFECYCLE:
+		return "PUT Bucket lifecycle"
+	case PUTBUCKET_POLICY:
+		return "PUT Bucket policy"
+	case PUTBUCKET_LOGGING:
+		return "PUT Bucket logging"
+	case PUTBUCKET_NOTIFICATION:
+		return "PUT Bucket notification"
+	case PUTBUCKET_REPLICATION:
+		return "PUT Bucket replication"
+	case PUTBUCKET_TAGGING:
+		return "PUT Bucket tagging"
+	case PUTBUCKET_REQUESTPAYMENT:
+		return "PUT Bucket requestPayment"
+	case PUTBUCKET_VERSIONING:
+		return "PUT Bucket versioning"
+	case PUTBUCKET_WEBSITE:
+		return "PUT Bucket website"
+	case HEADBUCKET:
+		return "HEAD Bucket"
+	case DELETEOBJECT:
+		return "DELETE Object"
+	case GETOBJECT:
+		return "GET Object"
+	case GETOBJECT_ACL:
+		return "GET Object acl"
+	case GETOBJECT_TORRENT:
+		return "GET Object torrent"
+	case HEADOBJECT:
+		return "HEAD Object"
+	case POSTOBJECT:
+		return "POST Object"
+	case POSTOBJECT_RESTORE:
+		return "POST Object restore"
+	case PUTOBJECT:
+		return "PUT Object"
+	case PUTOBJECT_ACL:
+		return "PUT Object acl"
+	}
+
+	return ""
+}
 
 type ListResp struct {
 	Name       string
@@ -146,12 +243,28 @@ const (
 	DELETEBUCKET_TAGGING
 	DELETEBUCKET_WEBSITE
 	PUTBUCKET
+	PUTBUCKET_ACL
+	PUTBUCKET_CORS
+	PUTBUCKET_LIFECYCLE
+	PUTBUCKET_POLICY
+	PUTBUCKET_LOGGING
+	PUTBUCKET_NOTIFICATION
+	PUTBUCKET_REPLICATION
+	PUTBUCKET_TAGGING
+	PUTBUCKET_REQUESTPAYMENT
+	PUTBUCKET_VERSIONING
+	PUTBUCKET_WEBSITE
 	HEADBUCKET
 	DELETEOBJECT
 	GETOBJECT
+	GETOBJECT_ACL
+	GETOBJECT_TORRENT
 	HEADOBJECT
 	POSTOBJECT
+	POSTOBJECT_RESTORE
 	PUTOBJECT
+	PUTOBJECT_ACL
+	PUTOBJECT_COPY
 )
 
 type S3Request struct {
@@ -215,6 +328,7 @@ func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+
 }
 
 func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
@@ -264,61 +378,78 @@ func postObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	data, err := backend.GetObject(rd.bucket, rd.object, rd.authorization)
+
+	if err != nil {
+		http.Error(w, "Not Implemented", 500)
+	}
+
+	w.Write(data)
+}
+
+func putObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	content, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		http.Error(w, "Unkown Error", 500)
+		return
+	}
+
+	err = backend.PutObject(rd.bucket, rd.object, content, rd.authorization)
+
+	if err != nil {
+		http.Error(w, "Not Implemented", 500)
+	}
+
+	w.WriteHeader(200)
+}
+
+func copyObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func putObjectHandler(w http.ResponseWriter, r *http.Request) {
+func headObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func copyObjectHandler(w http.ResponseWriter, r *http.Request) {
+func deleteObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func headObjectHandler(w http.ResponseWriter, r *http.Request) {
+func getBucketObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func deleteObjectHandler(w http.ResponseWriter, r *http.Request) {
+func getBucketVersioningHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func getBucketObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
+func putBucketVersioningHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func getBucketVersioningHandler(w http.ResponseWriter, r *http.Request) {
+func deleteObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func putBucketVersioningHandler(w http.ResponseWriter, r *http.Request) {
+func getObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func deleteObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
+func headObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
 
-func getObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
-
-	http.Error(w, "Not Implemented", 500)
-}
-
-func headObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
-
-	http.Error(w, "Not Implemented", 500)
-}
-
-func putObjectVersionHandler(w http.ResponseWriter, r *http.Request) {
+func putObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 
 	http.Error(w, "Not Implemented", 500)
 }
@@ -333,14 +464,58 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Print(rd.s3method)
+
 	switch rd.s3method {
-	case PUTBUCKET:
-		putBucketHandler(w, r, rd)
 	case GETBUCKET:
 		getBucketHandler(w, r, rd)
+	case GETBUCKET_ACL:
+	case GETBUCKET_CORS:
+	case GETBUCKET_LIFECYCLE:
+	case GETBUCKET_POLICY:
+	case GETBUCKET_LOCATION:
+		getBucketLocationHandler(w, r, rd)
+	case GETBUCKET_LOGGING:
+	case GETBUCKET_NOTIFICATION:
+	case GETBUCKET_REPLICATION:
+	case GETBUCKET_TAGGING:
+	case GETBUCKET_OBJECTVERSION:
+	case GETBUCKET_REQUESTPAYMENT:
+	case GETBUCKET_VERSIONING:
+		getBucketVersioningHandler(w, r, rd)
+	case GETBUCKET_WEBSITE:
 	case HEADBUCKET:
-		log.Printf("HeadBucket")
 		headBucketHandler(w, r, rd)
+	case PUTBUCKET:
+		putBucketHandler(w, r, rd)
+	case DELETEBUCKET:
+		deleteBucketHandler(w, r, rd)
+	case PUTBUCKET_ACL:
+	case PUTBUCKET_CORS:
+	case PUTBUCKET_LIFECYCLE:
+	case PUTBUCKET_POLICY:
+	case PUTBUCKET_LOGGING:
+	case PUTBUCKET_NOTIFICATION:
+	case PUTBUCKET_REPLICATION:
+	case PUTBUCKET_TAGGING:
+	case PUTBUCKET_REQUESTPAYMENT:
+	case PUTBUCKET_VERSIONING:
+	case DELETEOBJECT:
+	case GETOBJECT:
+		getObjectHandler(w, r, rd)
+	case GETOBJECT_ACL:
+	case GETOBJECT_TORRENT:
+	case HEADOBJECT:
+		headObjectHandler(w, r, rd)
+	case POSTOBJECT:
+		postObjectHandler(w, r, rd)
+	case POSTOBJECT_RESTORE:
+	case PUTOBJECT:
+		putObjectHandler(w, r, rd)
+	case PUTOBJECT_ACL:
+	case PUTOBJECT_COPY:
+	default:
+		http.Error(w, "Unkown Error", 200)
 	}
 
 	fmt.Printf("%v\n", rd)
@@ -412,8 +587,10 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 
 func main() {
 	flag.Parse()
-	host = "localhost:" + *port
+	host = *hostname + ":" + *port
 	backend = inMemory.NewS3Backend()
+
+	fmt.Printf("Launching S3Server on port %d\n", *port)
 
 	http.HandleFunc("/", mainHandler)
 

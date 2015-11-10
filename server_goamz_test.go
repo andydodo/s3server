@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/goamz/goamz/aws"
@@ -47,7 +48,14 @@ func _TestGetBucket(t *testing.T) {
 
 }
 
-func _TestPutObject(t *testing.T) {
+func byteSliceCompare() {
+
+}
+
+func TestObjectCycle(t *testing.T) {
+	objectPath := "/test1"
+	objectContents := []byte("test1")
+
 	auth, err := aws.EnvAuth()
 
 	if err != nil {
@@ -57,9 +65,19 @@ func _TestPutObject(t *testing.T) {
 	s := s3.New(auth, localRegion)
 
 	b := s.Bucket("TestBucket")
-	err = b.Put("/test1", []byte("test1"), "application/octet-stream", "acl", s3.Options{})
+	err = b.Put(objectPath, objectContents, "application/octet-stream", "acl", s3.Options{})
 
 	if err != nil {
 		t.Error(err)
+	}
+
+	data, err := b.Get(objectPath)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !bytes.Equal(data, objectContents) {
+		t.Errorf("Expected content %v, got content: %v", objectContents, data)
 	}
 }
