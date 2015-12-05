@@ -12,6 +12,7 @@ import (
 
 	"github.com/0x434D53/s3server/common"
 	"github.com/0x434D53/s3server/s3backend/inMemory"
+	"strconv"
 )
 
 var port = flag.String("port", "10001", "Server will run on this port")
@@ -21,7 +22,7 @@ var host string
 
 var backend common.S3Backend
 
-func writeCommonHeaders(w http.ResponseWriter, h *common.ResponseHeaders) {
+func setCommondResponseHeaders(w http.ResponseWriter, h *common.ResponseHeaders) {
 	hd := w.Header()
 
 	if h.ContentLength != "" {
@@ -57,7 +58,7 @@ func WriteAndLogError(err error, w http.ResponseWriter, r *http.Request, rd *S3R
 }
 
 func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	err := backend.HeadBucket(rd.bucket, rd.authorization)
+	err := backend.HeadBucket(rd.bucket, rd.Authorization)
 
 	log.Printf("HeadBucketHandler: %v", err)
 
@@ -73,7 +74,7 @@ func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	err := backend.PutBucket(rd.bucket, rd.authorization)
+	err := backend.PutBucket(rd.bucket, rd.Authorization)
 	log.Printf("PutBucketHandler: %v", err)
 
 	if err != nil {
@@ -84,7 +85,7 @@ func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	lbr, err := backend.GetBucketObjects(rd.bucket, rd.authorization)
+	lbr, err := backend.GetBucketObjects(rd.bucket, rd.Authorization)
 
 	if err == common.ErrNotFound {
 		http.Error(w, "Not Found", 404)
@@ -120,24 +121,36 @@ func postObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	data, err := backend.GetObject(rd.bucket, rd.object, rd.authorization)
+	data, ct, err := backend.GetObject(rd.bucket, rd.object, rd.Authorization)
 
 	if err != nil {
-		http.Error(w, "Not Implemented", 500)
+		if err == common.ErrNotFound {
+			http.Error(w, "Not Found", 404)
+		} else {
+			http.Error(w, "InternalServeError", 500)
+			return
+		}
 	}
+
+	rh := &common.ResponseHeaders{
+		ContentLength: fmt.Sprintf("%d", len(data)),
+		ContentType: ct,
+	}
+
+	setCommondResponseHeaders(w, rh)
 
 	w.Write(data)
 }
 
 func putObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	content, err := ioutil.ReadAll(r.Body)
+	contents, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
 		http.Error(w, "Unkown Error", 500)
 		return
 	}
 
-	err = backend.PutObject(rd.bucket, rd.object, content, rd.authorization)
+	err = backend.PutObject(rd.bucket, rd.object, contents, rd.ContentType, rd.Authorization)
 
 	if err != nil {
 		http.Error(w, "Not Implemented", 500)
@@ -147,18 +160,22 @@ func putObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func copyObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
 func headObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
 func deleteObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	err := backend.DeleteObject(rd.bucket, rd.object, "")
 
-	http.Error(w, "Not Implemented", 500)
+	if err != nil {
+		http.Error(w, "Not Implemented", 500)
+
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func getBucketObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
@@ -243,6 +260,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	case PUTBUCKET_REQUESTPAYMENT:
 	case PUTBUCKET_VERSIONING:
 	case DELETEOBJECT:
+		deleteObjectHandler(w, r, rd)
 	case GETOBJECT:
 		getObjectHandler(w, r, rd)
 	case GETOBJECT_ACL:
@@ -311,11 +329,25 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 		}
 	}
 
-	s3r.contentLength = r.Header.Get("Content-Length")
+	cl :=r.Header.Get("Content-Length")
+
+	if cl != "" {
+		cli, err := strconv.ParseUint(cl, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		s3r.ContentLength = cli
+	}
+	s3r.ContentType = r.Header.Get("Content-Type")
 	s3r.contentEncoding = r.Header.Get("Content-Encoding")
-	s3r.contentMD5 = []byte(r.Header.Get("Content-MD5"))
+	s3r.ContentMD5 = r.Header.Get("Content-MD5")
 
 	return &s3r, nil
+}
+
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("--- RESET ---")
+	backend.Reset()
 }
 
 func main() {
@@ -326,6 +358,7 @@ func main() {
 	fmt.Printf("Launching S3Server on port %v\n", *port)
 
 	http.HandleFunc("/", mainHandler)
+	http.HandleFunc("/_internal/reset", resetHandler)
 
 	log.Fatal(http.ListenAndServe(host, nil))
 }

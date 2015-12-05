@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+	"github.com/0x434D53/s3server/common"
 )
 
 type S3METHOD int
@@ -253,18 +254,14 @@ const (
 )
 
 type S3Request struct {
+	common.RequestHeaders
 	bucket               string
 	object               string
 	method               string
 	s3method             S3METHOD
-	authorization        string
-	contentMD5           []byte
-	date                 time.Time
-	contentLength        string
 	contentEncoding      string
 	lastModified         time.Time
 	versionID            string
-	deleteMarker         bool
 	serversideEncryption bool
 }
 

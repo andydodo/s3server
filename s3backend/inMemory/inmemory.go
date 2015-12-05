@@ -9,8 +9,13 @@ import (
 	. "github.com/0x434D53/s3server/common"
 )
 
+func Log(method, bucket, object string) {
+	log.Printf("[%s] %s %s", method, bucket, object)
+}
+
 type object struct {
 	name     string
+	contentType string
 	contents []byte
 }
 
@@ -42,7 +47,16 @@ func NewS3Backend() S3Backend {
 	return s3
 }
 
+func (s3 *S3InMemory) Reset() {
+	Log("RESET", "", "")
+	s3.Lock()
+
+	defer s3.Unlock()
+	s3.buckets = make(map[string]*bucket)
+}
+
 func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, error) {
+	Log("GetService", "", "")
 	s3.Lock()
 	defer s3.Unlock()
 	res := ListAllMyBucketsResult{}
@@ -61,7 +75,8 @@ func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, error) {
 	return &res, nil
 }
 
-func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []byte, auth string) error {
+func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []byte, contentType string, auth string) error {
+	Log("PostObject", bucketName, objectName)
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -71,22 +86,23 @@ func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []by
 		return ErrNotFound
 	}
 
-	b.objects[objectName] = &object{name: objectName, contents: data}
+	b.objects[objectName] = &object{name: objectName, contentType: contentType, contents: data}
 
 	return nil
 }
 
 func (s3 *S3InMemory) PutObjectCopy(bucketName string, objectName string, targetBucketName string, targetObjectName string, auth string) error {
+	Log("PutObjectCopy", bucketName+"->"+targetBucketName, objectName+"->"+targetObjectName)
 	s3.Lock()
 	defer s3.Unlock()
 
-	b, err := s3.GetObject(bucketName, objectName, auth)
+	b, ct, err := s3.GetObject(bucketName, objectName, auth)
 
 	if err != nil {
 		return err
 	}
 
-	err = s3.PutObject(targetBucketName, targetObjectName, b, auth)
+	err = s3.PutObject(targetBucketName, targetObjectName, b,ct, auth)
 
 	if err != nil {
 		return err
@@ -95,7 +111,8 @@ func (s3 *S3InMemory) PutObjectCopy(bucketName string, objectName string, target
 	return nil
 }
 
-func (s3 *S3InMemory) PutObject(bucketName string, objectName string, data []byte, auth string) error {
+func (s3 *S3InMemory) PutObject(bucketName string, objectName string, data []byte,  contentType string, auth string) error {
+	Log("PutObject", bucketName, objectName)
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -110,6 +127,7 @@ func (s3 *S3InMemory) PutObject(bucketName string, objectName string, data []byt
 }
 
 func (s3 *S3InMemory) DeleteBucket(bucketName string, auth string) error {
+	Log("DeleteBucket", bucketName, "")
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -119,6 +137,7 @@ func (s3 *S3InMemory) DeleteBucket(bucketName string, auth string) error {
 }
 
 func (s3 *S3InMemory) PutBucket(bucketName string, auth string) error {
+	Log("PutBucket", bucketName, "")
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -131,6 +150,7 @@ func (s3 *S3InMemory) PutBucket(bucketName string, auth string) error {
 }
 
 func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) (*ListBucketResult, error) {
+	Log("GetBucketObject", bucketName, "")
 	s3.Lock()
 	b, ok := s3.buckets[bucketName]
 	s3.Unlock()
@@ -160,6 +180,7 @@ func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) (*ListBuc
 }
 
 func (s3 *S3InMemory) HeadBucket(bucket string, auth string) error {
+	Log("HeadBucket", bucket, "")
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -172,6 +193,7 @@ func (s3 *S3InMemory) HeadBucket(bucket string, auth string) error {
 }
 
 func (s3 *S3InMemory) HeadObject(bucket string, object string, auth string) error {
+	Log("HeadObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -187,26 +209,37 @@ func (s3 *S3InMemory) HeadObject(bucket string, object string, auth string) erro
 }
 
 func (s3 *S3InMemory) DeleteObject(bucket string, object string, auth string) error {
+	Log("DeleteObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
+
+	if b, ok := s3.buckets[bucket]; !ok {
+		return ErrNotFound
+	} else {
+		if _, ok := b.objects[object]; !ok {
+			return ErrNotFound
+		}
+		delete(b.objects, object)
+	}
 
 	return nil
 }
 
-func (s3 *S3InMemory) GetObject(bucket string, object string, auth string) ([]byte, error) {
+func (s3 *S3InMemory) GetObject(bucket string, object string, auth string) ([]byte, string, error) {
+	Log("GetObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
 
 	b, ok := s3.buckets[bucket]
 
 	if !ok {
-		return nil, ErrNotFound
+		return nil, "", ErrNotFound
 	}
 
 	o, ok := b.objects[object]
 
 	if !ok {
-		return nil, ErrNotFound
+		return nil, "", ErrNotFound
 	}
-	return o.contents, nil
+	return o.contents, o.contentType, nil
 }
