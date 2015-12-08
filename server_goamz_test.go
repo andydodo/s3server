@@ -153,3 +153,11 @@ func TestObjectCycle(t *testing.T) {
 		t.Fatalf("Bucket should be empty, but contains %d objects", len(*o))
 	}
 }
+
+func TestComparedContentMD5AndContent(t *testing.T) {
+	t.Fatalf("Not implemented")
+}
+
+func TestDeletedOnlyEmptyBuckets(t *testing.T) {
+	t.Fatalf("Not implemented")
+}

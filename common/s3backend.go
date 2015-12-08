@@ -66,9 +66,6 @@ type Options struct {
 	CacheControl     string
 	RedirectLocation string
 	ContentMD5       string
-	// What else?
-	// Content-Disposition string
-	//// The following become headers so they are []strings rather than strings... I think
 	// x-amz-storage-class []string
 }
 
@@ -112,11 +109,6 @@ type ListResp struct {
 	Marker     string
 	NextMarker string
 	MaxKeys    int
-
-	// IsTruncated is true if the results have been truncated because
-	// there are more keys and prefixes than can fit in MaxKeys.
-	// N.B. this is the opposite sense to that documented (incorrectly) in
-	// http://goo.gl/YjQTc
 	IsTruncated    bool
 	Contents       []Key
 	CommonPrefixes []string `xml:">Prefix"`
@@ -146,14 +138,11 @@ type VersionsResp struct {
 	CommonPrefixes  []string `xml:">Prefix"`
 }
 
-// The Version type represents an object version stored in an S3 bucket.
 type Version struct {
 	Key          string
 	VersionId    string
 	IsLatest     bool
 	LastModified string
-	// ETag gives the hex-encoded MD5 sum of the contents,
-	// surrounded with double-quotes.
 	ETag         string
 	Size         int64
 	Owner        Owner
@@ -164,9 +153,8 @@ type Error struct {
 	StatusCode int    // HTTP status code (200, 403, ...)
 	Code       string // EC2 error code ("UnsupportedOperation", ...)
 	Message    string // The human-oriented error message
-	BucketName string
+	Resource string
 	RequestId  string
-	HostId     string
 }
 
 type Owner struct {
