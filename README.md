@@ -1,3 +1,5 @@
+-- PREALPHA - NOT READY FOR USE YET --
+
 # s3server
 
 A Amazon S3-compatible server with interchangeable backends for development and testing purposes. Possibly production-ready in the future.
