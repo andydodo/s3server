@@ -1,15 +1,12 @@
 package common
 
-import (
-	"errors"
-	"time"
-)
+import "time"
 
-var (
-	ErrNotFound      = errors.New("Not found")
-	ErrForbidden     = errors.New("Forbidden")
-	ErrAlreadyExists = errors.New("Already Exists")
-)
+//var (
+//ErrNotFound      = errors.New("Not found")
+//ErrForbidden     = errors.New("Forbidden")
+//ErrAlreadyExists = errors.New("Already Exists")
+//)
 
 type ListAllMyBucketsResult struct {
 	Owner   Owner
@@ -42,20 +39,20 @@ type Contents struct {
 type Metadata struct{}
 
 type S3Backend interface {
-	GetService(auth string) (*ListAllMyBucketsResult, error)
-	DeleteBucket(bucket string, auth string) error
-	GetBucketObjects(bucket string, auth string) (*ListBucketResult, error)
-	HeadBucket(bucket string, auth string) error
-	PutBucket(bucket string, auth string) error // More Parameters available
-	DeleteObject(bucket string, object string, auth string) error
-	GetObject(bucket string, object string, auth string) ([]byte, string, error)
-	//GetObjectStream(bucket string, object string, auth string) (io.WriteCloser, error)
-	HeadObject(bucket string, object string, auth string) error
-	PutObject(bucket string, object string, data []byte, contentType string, auth string) error
-	//PutObjectStream(bucket string, object string, r io.ReadCloser, auth string) error
-	PutObjectCopy(bucket string, object string, targetBucket string, targetObject string, auth string) error
-	PostObject(bucket string, object string, data []byte, contentType string, auth string) error
-	//PostObjectStream(bucket string, object string, r io.ReadCloser, auth string) error
+	GetService(auth string) (*ListAllMyBucketsResult, *Error)
+	DeleteBucket(bucket string, auth string) *Error
+	GetBucketObjects(bucket string, auth string) (*ListBucketResult, *Error)
+	HeadBucket(bucket string, auth string) *Error
+	PutBucket(bucket string, auth string) *Error // More Parameters available
+	DeleteObject(bucket string, object string, auth string) *Error
+	GetObject(bucket string, object string, auth string) ([]byte, string, *Error)
+	//GetObjectStream(bucket string, object string, auth string) (io.WriteCloser, *Error)
+	HeadObject(bucket string, object string, auth string) *Error
+	PutObject(bucket string, object string, data []byte, contentType string, auth string) *Error
+	//PutObjectStream(bucket string, object string, r io.ReadCloser, auth string) *Error
+	PutObjectCopy(bucket string, object string, targetBucket string, targetObject string, auth string) *Error
+	PostObject(bucket string, object string, data []byte, contentType string, auth string) *Error
+	//PostObjectStream(bucket string, object string, r io.ReadCloser, auth string) *Error
 	Reset()
 }
 
@@ -103,12 +100,12 @@ type Object struct {
 }
 
 type ListResp struct {
-	Name       string
-	Prefix     string
-	Delimiter  string
-	Marker     string
-	NextMarker string
-	MaxKeys    int
+	Name           string
+	Prefix         string
+	Delimiter      string
+	Marker         string
+	NextMarker     string
+	MaxKeys        int
 	IsTruncated    bool
 	Contents       []Key
 	CommonPrefixes []string `xml:">Prefix"`
@@ -147,14 +144,6 @@ type Version struct {
 	Size         int64
 	Owner        Owner
 	StorageClass string
-}
-
-type Error struct {
-	StatusCode int    // HTTP status code (200, 403, ...)
-	Code       string // EC2 error code ("UnsupportedOperation", ...)
-	Message    string // The human-oriented error message
-	Resource string
-	RequestId  string
 }
 
 type Owner struct {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"time"
+
 	"github.com/0x434D53/s3server/common"
 )
 
@@ -194,15 +195,6 @@ type Version struct {
 	Size         int64
 	Owner        Owner
 	StorageClass string
-}
-
-type Error struct {
-	StatusCode int    // HTTP status code (200, 403, ...)
-	Code       string // EC2 error code ("UnsupportedOperation", ...)
-	Message    string // The human-oriented error message
-	BucketName string
-	RequestId  string
-	HostId     string
 }
 
 const (

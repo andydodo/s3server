@@ -17,18 +17,22 @@ import (
 )
 
 var port = flag.String("port", "10001", "Server will run on this port")
-var hostname = flag.String("host", "localhost", "Hostname analogous to w3.amazonaws.com")
+var hostname = flag.String("host", "test.dev", "Hostname analogous to s3.amazonaws.com")
 var basePath = flag.String("basepath", "s3", "Basepath for S3")
 var host string
 
 var backend common.S3Backend
 
-func writeError(w http.ResponseWriter, awserr Error) error {
+func writeError(w http.ResponseWriter, awserr *common.Error) error {
 	b, err := xml.Marshal(awserr)
 
 	if err != nil {
 		return err
 	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(awserr.StatusCode)
 
 	w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>`))
 	w.Write(b)
@@ -60,24 +64,13 @@ func setCommondResponseHeaders(w http.ResponseWriter, h *common.ResponseHeaders)
 	hd.Set("x-amz-version-id", h.XAmzVersionId)
 }
 
-func WriteAndLogError(err error, w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	log.Print(err)
-	if err == common.ErrNotFound {
-		http.Error(w, "Not Found", 404)
-	} else if err == common.ErrAlreadyExists {
-		http.Error(w, "Already exists", 409)
-	} else {
-		http.Error(w, "Unknown error", 500)
-	}
-}
-
 func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 	err := backend.HeadBucket(rd.bucket, rd.Authorization)
 
 	log.Printf("HeadBucketHandler: %v", err)
 
 	if err != nil {
-		WriteAndLogError(err, w, r, rd)
+		writeError(w, err)
 	} else {
 		w.WriteHeader(200)
 	}
@@ -88,25 +81,21 @@ func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	err := backend.PutBucket(rd.bucket, rd.Authorization)
-	log.Printf("PutBucketHandler: %v", err)
+	awserr := backend.PutBucket(rd.bucket, rd.Authorization)
+	log.Printf("PutBucketHandler: %v", awserr)
 
-	if err != nil {
-		WriteAndLogError(err, w, r, rd)
+	if awserr != nil {
+		writeError(w, awserr)
 	} else {
 		w.WriteHeader(200)
 	}
 }
 
 func getBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	lbr, err := backend.GetBucketObjects(rd.bucket, rd.Authorization)
+	lbr, awserr := backend.GetBucketObjects(rd.bucket, rd.Authorization)
 
-	if err == common.ErrNotFound {
-		http.Error(w, "Not Found", 404)
-		return
-	} else if err != nil {
-		log.Print(err)
-		http.Error(w, "Error", 500)
+	if awserr != nil {
+		writeError(w, awserr)
 		return
 	}
 
@@ -142,12 +131,8 @@ func getObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 	data, ct, err := backend.GetObject(rd.bucket, rd.object, rd.Authorization)
 
 	if err != nil {
-		if err == common.ErrNotFound {
-			http.Error(w, "Not Found", 404)
-		} else {
-			http.Error(w, "InternalServeError", 500)
-			return
-		}
+		writeError(w, err)
+		return
 	}
 
 	rh := &common.ResponseHeaders{
@@ -164,14 +149,15 @@ func putObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 	contents, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
-		http.Error(w, "Unkown Error", 500)
+		writeError(w, &common.ErrInternalError)
 		return
 	}
 
-	err = backend.PutObject(rd.bucket, rd.object, contents, rd.ContentType, rd.Authorization)
+	awserr := backend.PutObject(rd.bucket, rd.object, contents, rd.ContentType, rd.Authorization)
 
-	if err != nil {
-		http.Error(w, "Not Implemented", 500)
+	if awserr != nil {
+		writeError(w, awserr)
+		return
 	}
 
 	w.WriteHeader(200)
@@ -189,45 +175,38 @@ func deleteObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) 
 	err := backend.DeleteObject(rd.bucket, rd.object, "")
 
 	if err != nil {
-		http.Error(w, "Not Implemented", 500)
-
+		writeError(w, err)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
 
 func getBucketObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
 func getBucketVersioningHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
 func putBucketVersioningHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
 func deleteObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
 func getObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
 func headObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
 func putObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
 	http.Error(w, "Not Implemented", 500)
 }
 
@@ -304,6 +283,7 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 
 	pathMethod := false
 
+	fmt.Println(r.Host)
 	if r.Host == host {
 		pathMethod = true
 	}
@@ -371,6 +351,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	flag.Parse()
 	host = *hostname + ":" + *port
+	//	host = *hostname + ":" + *port
 	backend = inMemory.NewS3Backend()
 
 	fmt.Printf("Launching S3Server on port %v\n", *port)
@@ -378,5 +359,5 @@ func main() {
 	http.HandleFunc("/", mainHandler)
 	http.HandleFunc("/_internal/reset", resetHandler)
 
-	log.Fatal(http.ListenAndServe(host, nil))
+	log.Fatal(http.ListenAndServe(":"+string(*port), nil))
 }

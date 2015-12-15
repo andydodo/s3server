@@ -1,4 +1,4 @@
-package main
+package tests
 
 import (
 	"bytes"
@@ -11,8 +11,8 @@ import (
 )
 
 var localRegion = aws.Region{
-	Name:                 "localhost",
-	S3Endpoint:           "http://localhost:10001",
+	Name:                 "test.dev",
+	S3Endpoint:           "http://test.dev:10001",
 	S3BucketEndpoint:     "",
 	S3LocationConstraint: false,
 	S3LowercaseBucket:    true,

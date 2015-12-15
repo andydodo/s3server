@@ -1,6 +1,22 @@
-package main
+package common
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
+
+type Error struct {
+	StatusCode int    // HTTP status code (200, 403, ...)
+	Code       string // EC2 error code ("UnsupportedOperation", ...)
+	Message    string // The human-oriented error message
+	BucketName string
+	RequestId  string
+	HostId     string
+}
+
+func (err Error) Error() string {
+	return fmt.Sprintf("[%s/%d] %s", err.Code, err.StatusCode, err.Message)
+}
 
 var (
 	ErrAccessDenied                            = Error{http.StatusForbidden, "AccessDenied", "Access Denied", "", "", ""}

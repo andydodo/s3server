@@ -14,9 +14,9 @@ func Log(method, bucket, object string) {
 }
 
 type object struct {
-	name     string
+	name        string
 	contentType string
-	contents []byte
+	contents    []byte
 }
 
 func (o object) String() string {
@@ -55,7 +55,7 @@ func (s3 *S3InMemory) Reset() {
 	s3.buckets = make(map[string]*bucket)
 }
 
-func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, error) {
+func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, *Error) {
 	Log("GetService", "", "")
 	s3.Lock()
 	defer s3.Unlock()
@@ -75,7 +75,7 @@ func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, error) {
 	return &res, nil
 }
 
-func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []byte, contentType string, auth string) error {
+func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []byte, contentType string, auth string) *Error {
 	Log("PostObject", bucketName, objectName)
 	s3.Lock()
 	defer s3.Unlock()
@@ -83,7 +83,7 @@ func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []by
 	b, ok := s3.buckets[bucketName]
 
 	if !ok {
-		return ErrNotFound
+		return &ErrNoSuchKey
 	}
 
 	b.objects[objectName] = &object{name: objectName, contentType: contentType, contents: data}
@@ -91,7 +91,7 @@ func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []by
 	return nil
 }
 
-func (s3 *S3InMemory) PutObjectCopy(bucketName string, objectName string, targetBucketName string, targetObjectName string, auth string) error {
+func (s3 *S3InMemory) PutObjectCopy(bucketName string, objectName string, targetBucketName string, targetObjectName string, auth string) *Error {
 	Log("PutObjectCopy", bucketName+"->"+targetBucketName, objectName+"->"+targetObjectName)
 	s3.Lock()
 	defer s3.Unlock()
@@ -102,7 +102,7 @@ func (s3 *S3InMemory) PutObjectCopy(bucketName string, objectName string, target
 		return err
 	}
 
-	err = s3.PutObject(targetBucketName, targetObjectName, b,ct, auth)
+	err = s3.PutObject(targetBucketName, targetObjectName, b, ct, auth)
 
 	if err != nil {
 		return err
@@ -111,14 +111,14 @@ func (s3 *S3InMemory) PutObjectCopy(bucketName string, objectName string, target
 	return nil
 }
 
-func (s3 *S3InMemory) PutObject(bucketName string, objectName string, data []byte,  contentType string, auth string) error {
+func (s3 *S3InMemory) PutObject(bucketName string, objectName string, data []byte, contentType string, auth string) *Error {
 	Log("PutObject", bucketName, objectName)
 	s3.Lock()
 	defer s3.Unlock()
 
 	b, ok := s3.buckets[bucketName]
 	if !ok {
-		return ErrNotFound
+		return &ErrNoSuchBucket
 	}
 
 	b.objects[objectName] = &object{name: objectName, contents: data}
@@ -126,7 +126,7 @@ func (s3 *S3InMemory) PutObject(bucketName string, objectName string, data []byt
 	return nil
 }
 
-func (s3 *S3InMemory) DeleteBucket(bucketName string, auth string) error {
+func (s3 *S3InMemory) DeleteBucket(bucketName string, auth string) *Error {
 	Log("DeleteBucket", bucketName, "")
 	s3.Lock()
 	defer s3.Unlock()
@@ -136,7 +136,7 @@ func (s3 *S3InMemory) DeleteBucket(bucketName string, auth string) error {
 	return nil
 }
 
-func (s3 *S3InMemory) PutBucket(bucketName string, auth string) error {
+func (s3 *S3InMemory) PutBucket(bucketName string, auth string) *Error {
 	Log("PutBucket", bucketName, "")
 	s3.Lock()
 	defer s3.Unlock()
@@ -146,17 +146,17 @@ func (s3 *S3InMemory) PutBucket(bucketName string, auth string) error {
 		return nil
 	}
 
-	return ErrAlreadyExists
+	return &ErrBucketAlreadyExists
 }
 
-func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) (*ListBucketResult, error) {
+func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) (*ListBucketResult, *Error) {
 	Log("GetBucketObject", bucketName, "")
 	s3.Lock()
 	b, ok := s3.buckets[bucketName]
 	s3.Unlock()
 
 	if !ok {
-		return nil, ErrNotFound
+		return nil, &ErrNoSuchBucket
 	}
 
 	b.Lock()
@@ -179,7 +179,7 @@ func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) (*ListBuc
 	return &lbr, nil
 }
 
-func (s3 *S3InMemory) HeadBucket(bucket string, auth string) error {
+func (s3 *S3InMemory) HeadBucket(bucket string, auth string) *Error {
 	Log("HeadBucket", bucket, "")
 	s3.Lock()
 	defer s3.Unlock()
@@ -188,36 +188,36 @@ func (s3 *S3InMemory) HeadBucket(bucket string, auth string) error {
 	if _, ok := s3.buckets[bucket]; ok {
 		return nil
 	} else {
-		return ErrNotFound
+		return &ErrNoSuchBucket
 	}
 }
 
-func (s3 *S3InMemory) HeadObject(bucket string, object string, auth string) error {
+func (s3 *S3InMemory) HeadObject(bucket string, object string, auth string) *Error {
 	Log("HeadObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
 
 	if b, ok := s3.buckets[bucket]; !ok {
-		return ErrNotFound
+		return &ErrNoSuchBucket
 	} else {
 		if _, ok := b.objects[object]; !ok {
-			return ErrNotFound
+			return &ErrNoSuchKey
 		}
 	}
 
 	return nil
 }
 
-func (s3 *S3InMemory) DeleteObject(bucket string, object string, auth string) error {
+func (s3 *S3InMemory) DeleteObject(bucket string, object string, auth string) *Error {
 	Log("DeleteObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
 
 	if b, ok := s3.buckets[bucket]; !ok {
-		return ErrNotFound
+		return &ErrNoSuchBucket
 	} else {
 		if _, ok := b.objects[object]; !ok {
-			return ErrNotFound
+			return &ErrNoSuchKey
 		}
 		delete(b.objects, object)
 	}
@@ -225,7 +225,7 @@ func (s3 *S3InMemory) DeleteObject(bucket string, object string, auth string) er
 	return nil
 }
 
-func (s3 *S3InMemory) GetObject(bucket string, object string, auth string) ([]byte, string, error) {
+func (s3 *S3InMemory) GetObject(bucket string, object string, auth string) ([]byte, string, *Error) {
 	Log("GetObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
@@ -233,13 +233,13 @@ func (s3 *S3InMemory) GetObject(bucket string, object string, auth string) ([]by
 	b, ok := s3.buckets[bucket]
 
 	if !ok {
-		return nil, "", ErrNotFound
+		return nil, "", &ErrNoSuchBucket
 	}
 
 	o, ok := b.objects[object]
 
 	if !ok {
-		return nil, "", ErrNotFound
+		return nil, "", &ErrNoSuchKey
 	}
 	return o.contents, o.contentType, nil
 }
