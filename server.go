@@ -17,7 +17,7 @@ import (
 )
 
 var port = flag.String("port", "10001", "Server will run on this port")
-var hostname = flag.String("host", "localhost", "Hostname analogous to w3.amazonaws.com")
+var hostname = flag.String("host", "testaws.dev", "Hostname analogous to w3.amazonaws.com")
 var basePath = flag.String("basepath", "s3", "Basepath for S3")
 var host string
 
@@ -370,7 +370,7 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	flag.Parse()
-	host = *hostname + ":" + *port
+	host = ":" + *port
 	backend = inMemory.NewS3Backend()
 
 	fmt.Printf("Launching S3Server on port %v\n", *port)
