@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"path"
 	"strings"
 
 	"strconv"
@@ -278,12 +277,11 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%v\n", rd)
 }
 
-func getS3RequestData(r *http.Request) (*S3Request, error) {
+func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
 	s3r := S3Request{}
 
 	pathMethod := false
 
-	fmt.Println(r.Host)
 	if r.Host == host {
 		pathMethod = true
 	}
@@ -291,8 +289,18 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 	log.Print(r.URL.Path)
 
 	if pathMethod {
-		s3r.bucket, s3r.object = path.Split(r.URL.Path)
-		s3r.bucket = strings.Trim(s3r.bucket, "/")
+		s := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(s) == 0 {
+			return nil, &common.ErrInvalidBucketName
+		} else if len(s) == 1 {
+			s3r.bucket = s[0]
+		} else if len(s) == 2 {
+			s3r.bucket = s[0]
+			s3r.object = s[1]
+		} else {
+			return nil, &common.ErrInvalidArgument
+		}
+		log.Printf("bucket: %s, object: %s", s3r.bucket, s3r.object)
 	} else {
 		//TODO
 	}
@@ -302,7 +310,7 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 	if s3r.object == "" {
 		switch r.Method {
 		case "POST":
-			return nil, fmt.Errorf("No POST on Buckets")
+			return nil, &common.ErrMethodNotAllowed
 		case "PUT":
 			s3r.s3method = PUTBUCKET
 		case "DELETE":
@@ -332,7 +340,7 @@ func getS3RequestData(r *http.Request) (*S3Request, error) {
 	if cl != "" {
 		cli, err := strconv.ParseUint(cl, 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, &common.ErrInvalidRequest
 		}
 		s3r.ContentLength = cli
 	}
