@@ -255,8 +255,16 @@ type S3Request struct {
 	lastModified         time.Time
 	versionID            string
 	serversideEncryption bool
+	params map[string][]string
 }
 
 func (s S3Request) String() string {
 	return fmt.Sprintf("%s/%s | %s / %v", s.bucket, s.object, s.method, s.s3method)
+}
+
+func (s S3Request) HasParam(param string) bool {
+	if _, ok := s.params[param]; ok {
+		return true
+	}
+	return false
 }

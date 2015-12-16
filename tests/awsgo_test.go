@@ -194,3 +194,267 @@ func awsObjectCycle(bucket string, t *testing.T) {
 		t.Fatalf("Bucket should be empty after delete, contains %d objects", len(loo.Contents))
 	}
 }
+
+func TestDeleteNonEmptyBucket(t *testing.T) {
+	bucket := "TestForDelete"
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Couldn't create bucket: %s", err)
+	}
+
+	_, err = svc.DeleteBucket(&s3.DeleteBucketInput{Bucket: aws.String(bucket)})
+
+	if err == nil {
+		t.Fatalf("A non-Empty Bucket should not have been deleted")
+	}
+}
+
+func TestGetBucketLocation(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketLocation(&s3.GetBucketLocationInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+
+
+
+
+
+
+// In Progess
+func TestGetBucketAcl(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketAcl(&s3.GetBucketAclInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketCors(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketCors(&s3.GetBucketCorsInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketLifecycle(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketLifecycle(&s3.GetBucketLifecycleInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketLifecycleConfiguration(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketLifecycleConfiguration(&s3.GetBucketLifecycleConfigurationInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketLogging(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketLogging(&s3.GetBucketLoggingInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketNotification(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketNotification(&s3.GetBucketNotificationConfigurationRequest{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketNotificationConfiguration(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketPolicy(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketPolicy(&s3.GetBucketPolicyInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketReplication(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketReplication(&s3.GetBucketReplicationInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketRequestPayment(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketRequestPayment(&s3.GetBucketRequestPaymentInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketTagging(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketTagging(&s3.GetBucketTaggingInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketVersioning(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketVersioning(&s3.GetBucketVersioningInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+func TestGetBucketWebsite(t *testing.T) {
+	bucket := "TestBucket"
+
+	svc := initTest(t)
+
+	_, err := svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Bucket could not be created: %s", err)
+	}
+
+	_, err = svc.GetBucketWebsite(&s3.GetBucketWebsiteInput{Bucket: aws.String(bucket)})
+
+	if err != nil {
+		t.Fatalf("Could not get Bucket location: %s", err)
+	}
+}
+

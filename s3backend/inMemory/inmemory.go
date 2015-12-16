@@ -48,7 +48,6 @@ func NewS3Backend() S3Backend {
 }
 
 func (s3 *S3InMemory) Reset() {
-	Log("RESET", "", "")
 	s3.Lock()
 
 	defer s3.Unlock()
@@ -56,7 +55,6 @@ func (s3 *S3InMemory) Reset() {
 }
 
 func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, *Error) {
-	Log("GetService", "", "")
 	s3.Lock()
 	defer s3.Unlock()
 	res := ListAllMyBucketsResult{}
@@ -76,7 +74,6 @@ func (s3 *S3InMemory) GetService(auth string) (*ListAllMyBucketsResult, *Error) 
 }
 
 func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []byte, contentType string, auth string) *Error {
-	Log("PostObject", bucketName, objectName)
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -92,7 +89,6 @@ func (s3 *S3InMemory) PostObject(bucketName string, objectName string, data []by
 }
 
 func (s3 *S3InMemory) PutObjectCopy(bucketName string, objectName string, targetBucketName string, targetObjectName string, auth string) *Error {
-	Log("PutObjectCopy", bucketName+"->"+targetBucketName, objectName+"->"+targetObjectName)
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -112,7 +108,6 @@ func (s3 *S3InMemory) PutObjectCopy(bucketName string, objectName string, target
 }
 
 func (s3 *S3InMemory) PutObject(bucketName string, objectName string, data []byte, contentType string, auth string) *Error {
-	Log("PutObject", bucketName, objectName)
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -127,7 +122,6 @@ func (s3 *S3InMemory) PutObject(bucketName string, objectName string, data []byt
 }
 
 func (s3 *S3InMemory) DeleteBucket(bucketName string, auth string) *Error {
-	Log("DeleteBucket", bucketName, "")
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -137,7 +131,6 @@ func (s3 *S3InMemory) DeleteBucket(bucketName string, auth string) *Error {
 }
 
 func (s3 *S3InMemory) PutBucket(bucketName string, auth string) *Error {
-	Log("PutBucket", bucketName, "")
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -150,7 +143,6 @@ func (s3 *S3InMemory) PutBucket(bucketName string, auth string) *Error {
 }
 
 func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) (*ListBucketResult, *Error) {
-	Log("GetBucketObject", bucketName, "")
 	s3.Lock()
 	b, ok := s3.buckets[bucketName]
 	s3.Unlock()
@@ -180,11 +172,9 @@ func (s3 *S3InMemory) GetBucketObjects(bucketName string, auth string) (*ListBuc
 }
 
 func (s3 *S3InMemory) HeadBucket(bucket string, auth string) *Error {
-	Log("HeadBucket", bucket, "")
 	s3.Lock()
 	defer s3.Unlock()
 
-	log.Print(bucket)
 	if _, ok := s3.buckets[bucket]; ok {
 		return nil
 	} else {
@@ -193,7 +183,6 @@ func (s3 *S3InMemory) HeadBucket(bucket string, auth string) *Error {
 }
 
 func (s3 *S3InMemory) HeadObject(bucket string, object string, auth string) *Error {
-	Log("HeadObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -209,7 +198,6 @@ func (s3 *S3InMemory) HeadObject(bucket string, object string, auth string) *Err
 }
 
 func (s3 *S3InMemory) DeleteObject(bucket string, object string, auth string) *Error {
-	Log("DeleteObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
 
@@ -226,7 +214,6 @@ func (s3 *S3InMemory) DeleteObject(bucket string, object string, auth string) *E
 }
 
 func (s3 *S3InMemory) GetObject(bucket string, object string, auth string) ([]byte, string, *Error) {
-	Log("GetObject", bucket, object)
 	s3.Lock()
 	defer s3.Unlock()
 

@@ -63,7 +63,12 @@ func setCommondResponseHeaders(w http.ResponseWriter, h *common.ResponseHeaders)
 	hd.Set("x-amz-version-id", h.XAmzVersionId)
 }
 
+func logHandlerCall(handler string, rd *S3Request) {
+	log.Printf("=====Web===== [%s / %s] %s/%s | %v |", handler, rd.s3method, rd.bucket, rd.object, rd.params)
+}
+
 func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("headBucketHandler", rd)
 	err := backend.HeadBucket(rd.bucket, rd.Authorization)
 
 	log.Printf("HeadBucketHandler: %v", err)
@@ -76,12 +81,12 @@ func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
+	logHandlerCall("getBucketsHandler", rd)
 }
 
 func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("putBucketHandler", rd)
 	awserr := backend.PutBucket(rd.bucket, rd.Authorization)
-	log.Printf("PutBucketHandler: %v", awserr)
 
 	if awserr != nil {
 		writeError(w, awserr)
@@ -91,6 +96,7 @@ func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketHandler", rd)
 	lbr, awserr := backend.GetBucketObjects(rd.bucket, rd.Authorization)
 
 	if awserr != nil {
@@ -110,10 +116,12 @@ func getBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func getBucketLocationHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketLocationHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func deleteBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("deleteBucketHandler", rd)
 	err := backend.DeleteBucket(rd.bucket, rd.Authorization)
 
 	if err != nil {
@@ -122,11 +130,12 @@ func deleteBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) 
 }
 
 func postObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-
+	logHandlerCall("postObjectHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func getObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getObjectHandler", rd)
 	data, ct, err := backend.GetObject(rd.bucket, rd.object, rd.Authorization)
 
 	if err != nil {
@@ -145,6 +154,7 @@ func getObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func putObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("putObjectHandler", rd)
 	contents, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
@@ -163,14 +173,17 @@ func putObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 }
 
 func copyObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("copyObjectHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func headObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("headObjectHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func deleteObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("deleteObjectHandler", rd)
 	err := backend.DeleteObject(rd.bucket, rd.object, "")
 
 	if err != nil {
@@ -182,30 +195,80 @@ func deleteObjectHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) 
 }
 
 func getBucketObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketObjectVersionHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func getBucketVersioningHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketVersioningHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+
+func getBucketACLHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketACLHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketCORSHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketCORSHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketLifecycleHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketLifecycleHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketPolicyHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketPolicyHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketLoggingHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketLoggingHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketNotificationHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketNotificationHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketReplicationHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketReplicationHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketTagging(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketTagging", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketRequestPaymentHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketRequestPaymentHandler", rd)
+	http.Error(w, "Not Implemented", 500)
+}
+func getBucketWebsiteHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getBucketWebsiteHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func putBucketVersioningHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("putBucketVersioningHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func deleteObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+
+	logHandlerCall("deleteObjectVersionHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func getObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("getObjectVersionHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func headObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+
+	logHandlerCall("headObjectVersionHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
 func putObjectVersionHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
+	logHandlerCall("putObjectVersionHandler", rd)
 	http.Error(w, "Not Implemented", 500)
 }
 
@@ -219,26 +282,35 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Print(rd.s3method)
-
 	switch rd.s3method {
 	case GETBUCKET:
 		getBucketHandler(w, r, rd)
 	case GETBUCKET_ACL:
+		getBucketACLHandler(w, r, rd)
 	case GETBUCKET_CORS:
+		getBucketCORSHandler(w, r, rd)
 	case GETBUCKET_LIFECYCLE:
+		getBucketLifecycleHandler(w, r, rd)
 	case GETBUCKET_POLICY:
+		getBucketPolicyHandler(w, r, rd)
 	case GETBUCKET_LOCATION:
 		getBucketLocationHandler(w, r, rd)
 	case GETBUCKET_LOGGING:
+		getBucketLoggingHandler(w, r, rd)
 	case GETBUCKET_NOTIFICATION:
+		getBucketNotificationHandler(w, r, rd)
 	case GETBUCKET_REPLICATION:
+		getBucketReplicationHandler(w, r, rd)
 	case GETBUCKET_TAGGING:
+		getBucketTagging(w, r, rd)
 	case GETBUCKET_OBJECTVERSION:
+		getBucketObjectVersionHandler(w, r, rd)
 	case GETBUCKET_REQUESTPAYMENT:
+		getBucketRequestPaymentHandler(w, r, rd)
 	case GETBUCKET_VERSIONING:
 		getBucketVersioningHandler(w, r, rd)
 	case GETBUCKET_WEBSITE:
+		getBucketWebsiteHandler(w, r, rd)
 	case HEADBUCKET:
 		headBucketHandler(w, r, rd)
 	case PUTBUCKET:
@@ -273,8 +345,6 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Unkown Error", 200)
 	}
-
-	fmt.Printf("%v\n", rd)
 }
 
 func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
@@ -285,8 +355,6 @@ func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
 	if r.Host == host {
 		pathMethod = true
 	}
-
-	log.Print(r.URL.Path)
 
 	if pathMethod {
 		s := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
@@ -300,12 +368,11 @@ func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
 		} else {
 			return nil, &common.ErrInvalidArgument
 		}
-		log.Printf("bucket: %s, object: %s", s3r.bucket, s3r.object)
 	} else {
 		//TODO
 	}
 
-	log.Print(r.Method)
+	s3r.params = r.URL.Query()
 
 	if s3r.object == "" {
 		switch r.Method {
@@ -318,7 +385,35 @@ func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
 		case "HEAD":
 			s3r.s3method = HEADBUCKET
 		case "GET":
-			s3r.s3method = GETBUCKET
+			if s3r.HasParam("location") {
+				s3r.s3method = GETBUCKET_LOCATION
+			} else if s3r.HasParam("acl") {
+				s3r.s3method = GETBUCKET_ACL
+			} else if s3r.HasParam("cors") {
+				s3r.s3method = GETBUCKET_CORS
+			} else if s3r.HasParam("lifecycle") {
+				s3r.s3method = GETBUCKET_LIFECYCLE
+			} else if s3r.HasParam("policy") {
+				s3r.s3method = GETBUCKET_POLICY
+			} else if s3r.HasParam("logging") {
+				s3r.s3method = GETBUCKET_LOGGING
+			} else if s3r.HasParam("notification") {
+				s3r.s3method = GETBUCKET_NOTIFICATION
+			} else if s3r.HasParam("replication") {
+				s3r.s3method = GETBUCKET_REPLICATION
+			} else if s3r.HasParam("tagging") {
+				s3r.s3method = GETBUCKET_TAGGING
+			} else if s3r.HasParam("versions") {
+				s3r.s3method = GETBUCKET_VERSIONING
+			} else if s3r.HasParam("requestPayment") {
+				s3r.s3method = GETBUCKET_REQUESTPAYMENT
+			} else if s3r.HasParam("versioning") {
+				s3r.s3method = GETBUCKET_VERSIONING
+			} else if s3r.HasParam("website") {
+				s3r.s3method = GETBUCKET_WEBSITE
+			} else {
+				s3r.s3method = GETBUCKET
+			}
 		}
 	} else {
 		switch r.Method {
@@ -352,7 +447,7 @@ func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
 }
 
 func resetHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("--- RESET ---")
+	log.Printf("=====RESET=====")
 	backend.Reset()
 }
 
