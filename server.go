@@ -80,10 +80,6 @@ func headBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 	}
 }
 
-func getBucketsHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
-	logHandlerCall("getBucketsHandler", rd)
-}
-
 func putBucketHandler(w http.ResponseWriter, r *http.Request, rd *S3Request) {
 	logHandlerCall("putBucketHandler", rd)
 	awserr := backend.PutBucket(rd.bucket, rd.Authorization)
@@ -379,9 +375,43 @@ func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
 		case "POST":
 			return nil, &common.ErrMethodNotAllowed
 		case "PUT":
-			s3r.s3method = PUTBUCKET
-		case "DELETE":
-			s3r.s3method = DELETEBUCKET
+			if s3r.HasParam("cors") {
+				s3r.s3method = PUTBUCKET_CORS
+			} else if s3r.HasParam("acl") {
+				s3r.s3method = PUTBUCKET_ACL
+			} else if s3r.HasParam("lifecycle") {
+				s3r.s3method = PUTBUCKET_LIFECYCLE
+			} else if s3r.HasParam("policy") {
+				s3r.s3method = PUTBUCKET_POLICY
+			} else if s3r.HasParam("notification") {
+				s3r.s3method = PUTBUCKET_NOTIFICATION
+			} else if s3r.HasParam("requestPayment") {
+				s3r.s3method = PUTBUCKET_REQUESTPAYMENT
+			} else if s3r.HasParam("replication") {
+				s3r.s3method = PUTBUCKET_REPLICATION
+			} else if s3r.HasParam("tagging") {
+				s3r.s3method = DELETEBUCKET_TAGGING
+			} else if s3r.HasParam("website") {
+				s3r.s3method = DELETEBUCKET_WEBSITE
+			} else {
+				s3r.s3method = PUTBUCKET
+			}
+			case "DELETE":
+			if s3r.HasParam("cors") {
+				s3r.s3method = DELETEBUCKET_CORS
+			} else if s3r.HasParam("lifecycle") {
+				s3r.s3method = DELETEBUCKET_LIFTCYCLE
+			} else if s3r.HasParam("policy") {
+				s3r.s3method = DELETEBUCKET_POLICY
+			} else if s3r.HasParam("replication") {
+				s3r.s3method = DELETEBUCKET_REPLICATION
+			} else if s3r.HasParam("tagging") {
+				s3r.s3method = DELETEBUCKET_TAGGING
+			} else if s3r.HasParam("website") {
+				s3r.s3method = DELETEBUCKET_WEBSITE
+			} else {
+				s3r.s3method = DELETEBUCKET
+			}
 		case "HEAD":
 			s3r.s3method = HEADBUCKET
 		case "GET":
@@ -418,15 +448,28 @@ func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
 	} else {
 		switch r.Method {
 		case "POST":
-			s3r.s3method = POSTOBJECT
+			if s3r.HasParam("restore") {
+				s3r.s3method = POSTOBJECT_RESTORE
+			} else {
+				s3r.s3method = POSTOBJECT
+			}
 		case "PUT":
-			s3r.s3method = PUTOBJECT
+			if s3r.HasParam("acl") {
+				s3r.s3method = PUTOBJECT_ACL
+			} else {
+				// TODO distinguish Put Copy
+				s3r.s3method = PUTOBJECT
+			}
 		case "DELETE":
 			s3r.s3method = DELETEOBJECT
 		case "HEAD":
 			s3r.s3method = HEADOBJECT
 		case "GET":
-			s3r.s3method = GETOBJECT
+			if s3r.HasParam("acl") {
+				s3r.s3method = GETOBJECT_ACL
+			} else {
+				s3r.s3method = GETOBJECT
+			}
 		}
 	}
 

@@ -457,4 +457,3 @@ func TestGetBucketWebsite(t *testing.T) {
 		t.Fatalf("Could not get Bucket location: %s", err)
 	}
 }
-
