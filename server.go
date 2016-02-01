@@ -396,7 +396,7 @@ func getS3RequestData(r *http.Request) (*S3Request, *common.Error) {
 			} else {
 				s3r.s3method = PUTBUCKET
 			}
-			case "DELETE":
+		case "DELETE":
 			if s3r.HasParam("cors") {
 				s3r.s3method = DELETEBUCKET_CORS
 			} else if s3r.HasParam("lifecycle") {
@@ -494,16 +494,27 @@ func resetHandler(w http.ResponseWriter, r *http.Request) {
 	backend.Reset()
 }
 
-func main() {
-	flag.Parse()
-	host = *hostname + ":" + *port
-	//	host = *hostname + ":" + *port
+func CreateMux() *http.ServeMux {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", mainHandler)
+	mux.HandleFunc("/_internal/reset", resetHandler)
+
+	return mux
+}
+
+func LaunchServer(_hostname string, _port string) error {
+	host = _hostname + ":" + _port
+	hostname = &_hostname
+	port = &_port
 	backend = inMemory.NewS3Backend()
 
 	fmt.Printf("Launching S3Server on port %v\n", *port)
 
-	http.HandleFunc("/", mainHandler)
-	http.HandleFunc("/_internal/reset", resetHandler)
+	return http.ListenAndServe(":"+string(*port), CreateMux())
+}
 
-	log.Fatal(http.ListenAndServe(":"+string(*port), nil))
+func main() {
+	flag.Parse()
+	log.Fatal(LaunchServer(*hostname, *port))
 }

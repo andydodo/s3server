@@ -6,15 +6,18 @@ import (
 	"net/http"
 	"testing"
 
+	. "github.com/0x434d53/s3server"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
-func ResetAWS(t *testing.T) {
-	url := "http://test.dev:10001/_internal/reset"
+var url string = "http://test.dev:10001"
 
-	_, err := http.Get(url)
+func ResetAWS(t *testing.T) {
+	resetURL := url + "_internal/reset"
+
+	_, err := http.Get(resetURL)
 
 	if err != nil {
 		t.Fatal("Could not Reset", err)
@@ -24,7 +27,7 @@ func ResetAWS(t *testing.T) {
 func initTest(t *testing.T) *s3.S3 {
 	ResetAWS(t)
 
-	c := &aws.Config{Endpoint: aws.String("http://test.dev:10001"), Region: aws.String("us-west-2")}
+	c := &aws.Config{Endpoint: aws.String(url), Region: aws.String("us-west-2")}
 	svc := s3.New(session.New(c))
 	return svc
 }
@@ -73,7 +76,6 @@ func testAWSObjectCycleSubdomainMethod(t *testing.T) {
 }
 
 func awsObjectCycle(bucket string, t *testing.T) {
-
 	objectPath := "test1"
 	objectContents := []byte("test1")
 	updatedObjectContents := []byte("Updatedtest")
@@ -229,11 +231,6 @@ func TestGetBucketLocation(t *testing.T) {
 		t.Fatalf("Could not get Bucket location: %s", err)
 	}
 }
-
-
-
-
-
 
 // In Progess
 func TestGetBucketAcl(t *testing.T) {
